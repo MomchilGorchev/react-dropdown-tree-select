@@ -37,7 +37,8 @@ class DropdownTreeSelect extends Component {
     showPartiallySelected: PropTypes.bool,
     nodeRenderer: PropTypes.func,
     iconRenderer: PropTypes.func,
-    tagRenderer: PropTypes.func
+    tagRenderer: PropTypes.func,
+    disabled: PropTypes.bool
   }
 
   static defaultProps = {
@@ -73,6 +74,10 @@ class DropdownTreeSelect extends Component {
     const tree = this.createList(this.props.data, this.props.simpleSelect, this.props.showPartiallySelected)
     const tags = this.treeManager.getTags()
     this.setState({ tree, tags })
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('click', this.handleOutsideClick, false)
   }
 
   componentWillReceiveProps(nextProps) {
@@ -177,10 +182,14 @@ class DropdownTreeSelect extends Component {
     this.keepDropdownActive = false
   }
 
+  nodeRenderer = node => <span>{ `node.title: ${node.label}` }</span>
+  tagRenderer = (label, onRemove, tag) => <span>{ `node.title: ${label}` }</span>
+
   render() {
     const dropdownTriggerClassname = cx({
       'dropdown-trigger': true,
       arrow: true,
+      disabled: this.props.disabled,
       top: this.state.showDropdown,
       bottom: !this.state.showDropdown
     })
@@ -193,7 +202,7 @@ class DropdownTreeSelect extends Component {
         }}
       >
         <div className="dropdown">
-          <a className={dropdownTriggerClassname} onClick={this.handleClick}>
+          <a className={dropdownTriggerClassname} onClick={!this.props.disabled && this.handleClick}>
             <Input
               inputRef={el => {
                 this.searchInput = el
@@ -204,7 +213,8 @@ class DropdownTreeSelect extends Component {
               onFocus={this.onInputFocus}
               onBlur={this.onInputBlur}
               onTagRemove={this.onTagRemove}
-              tagRenderer={this.props.tagRenderer}
+              tagRenderer={this.tagRenderer}
+              disabled={this.props.disabled}
             />
           </a>
           {this.state.showDropdown && (
